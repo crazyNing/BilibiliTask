@@ -18,6 +18,7 @@ import top.srcrs.domain.UserData;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * 封装的网络请求请求工具类
@@ -32,7 +33,7 @@ public class Request {
      */
     private static final UserData USER_DATA = UserData.getInstance();
 
-    private static final String UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36";
+    public static String UserAgent = "";
 
     private Request() {}
 
@@ -46,11 +47,11 @@ public class Request {
      * @Time 2020-10-13
      */
     public static JSONObject get(String url, JSONObject pJson) {
+        waitFor();
         HttpUriRequest httpGet = getBaseBuilder(HttpGet.METHOD_NAME)
                 .setUri(url)
                 .addParameters(getPairList(pJson))
                 .build();
-
         return clientExe(httpGet);
     }
 
@@ -63,7 +64,8 @@ public class Request {
      * @Time 2020-10-13
      */
     public static JSONObject get(String url) {
-       return get(url, new JSONObject());
+        waitFor();
+        return get(url, new JSONObject());
     }
 
     /**
@@ -76,6 +78,7 @@ public class Request {
      * @Time 2020-10-13
      */
     public static JSONObject post(String url, JSONObject pJson) {
+        waitFor();
         HttpUriRequest httpPost = getBaseBuilder(HttpPost.METHOD_NAME)
                 .addHeader("accept", "application/json, text/plain, */*")
                 .addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -83,7 +86,6 @@ public class Request {
                 .setUri(url)
                 .addParameters(getPairList(pJson))
                 .build();
-
         return clientExe(httpPost);
     }
 
@@ -112,6 +114,20 @@ public class Request {
         } catch (Exception e) {
             log.info("💔{}请求错误 : ", request.getMethod(), e);
             return new JSONObject();
+        }
+    }
+
+    /**
+     * 增加等待时间，解决风控问题
+     * 暂时先设置为每次请求预等待 0-3 秒钟
+     * @author srcrs
+     * @Time 2020-11-28
+     */
+    public static void waitFor() {
+        try{
+            Thread.sleep(new Random().nextInt(4)*1000);
+        } catch (Exception e){
+            log.warn("等待过程中出错",e);
         }
     }
 }
